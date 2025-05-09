@@ -1,22 +1,25 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+import os
 
 app = FastAPI()
 
-# Serve React static build
-app.mount("/", StaticFiles(directory="static", html=True), name="frontend")
+# serve React build
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
+# allow CORS from your env var
+origins = os.getenv("CORS_ORIGINS", "*").split(",")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
-class BacktestResult(BaseModel):
-    roi: float
-    max_drawdown: float
-    win_rate: float
-    sharpe_ratio: float
-
-@app.get("/backtest", response_model=BacktestResult)
-def backtest():
-    return BacktestResult(roi=0.12, max_drawdown=0.05, win_rate=0.54, sharpe_ratio=1.2)
+# ... your existing endpoints here ...
