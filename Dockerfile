@@ -17,18 +17,20 @@ RUN pip install --no-cache-dir -r requirements.txt
 FROM python:3.11-slim
 WORKDIR /app
 
-# Copy Python packages
+# Copy installed Python packages
 COPY --from=python-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-# Copy backend code and static build
+
+# Copy backend code and the built frontend
 COPY main.py requirements.txt ./
 COPY --from=frontend-build /app/frontend/build ./static
 
 # Expose HTTP port
 EXPOSE 80
 
-# Defaults for subgraph and CORS
+# Default env vars
 ENV SUBGRAPH_URL=https://api.thegraph.com/subgraphs/name/polymarket/polymarket-v2
 ENV CORS_ORIGINS="*"
 
-# Start API and static server
+# Launch both API and static server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+
