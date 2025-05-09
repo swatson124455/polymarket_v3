@@ -4,7 +4,7 @@ services:
     env: docker
     branch: main
     dockerfilePath: Dockerfile
-    internalPort: 80
+    port: 80
     healthCheckPath: /health
     autoDeploy: true
     envVars:
