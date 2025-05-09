@@ -2,11 +2,10 @@
 FROM node:18-alpine AS frontend-build
 WORKDIR /app/frontend
 
-# Copy only the lock‑files first to cache installs
-COPY frontend/package.json frontend/yarn.lock ./
-RUN yarn install --frozen-lockfile
+# Only package.json is needed—yarn will create its own lockfile if none exists
+COPY frontend/package.json ./
+RUN yarn install
 
-# Copy rest and build
 COPY frontend/public ./public
 COPY frontend/src    ./src
 RUN yarn build
@@ -15,18 +14,18 @@ RUN yarn build
 FROM python:3.11-slim
 WORKDIR /app
 
-# Copy in dependencies and install
-COPY requirements.txt .
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy in backend code
-COPY main.py .
+COPY main.py ./
 
-# Copy built frontend into a static directory
+# Pull in the built React app
 COPY --from=frontend-build /app/frontend/build ./static
 
-# Expose the port your FastAPI app listens on
 EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
 
 # Start the app
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
