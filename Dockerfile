@@ -3,6 +3,7 @@ FROM node:18-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package.json ./
 RUN yarn install --frozen-lockfile
+COPY frontend/public ./public
 COPY frontend/src ./src
 RUN yarn build
 
@@ -18,15 +19,14 @@ WORKDIR /app
 
 # Copy Python packages
 COPY --from=python-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-# Copy backend code
+# Copy backend code and static build
 COPY main.py requirements.txt ./
-# Copy built frontend
 COPY --from=frontend-build /app/frontend/build ./static
 
 # Expose HTTP port
 EXPOSE 80
 
-# Environment defaults
+# Defaults for subgraph and CORS
 ENV SUBGRAPH_URL=https://api.thegraph.com/subgraphs/name/polymarket/polymarket-v2
 ENV CORS_ORIGINS="*"
 
