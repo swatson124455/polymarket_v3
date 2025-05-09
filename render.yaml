@@ -2,8 +2,14 @@ services:
   - type: web
     name: polymarket-v3
     env: docker
-    plan: free
+    branch: main
     dockerfilePath: Dockerfile
+    autoDeploy: true
+    healthCheckPath: /health
     envVars:
-      - key: PORT
-        value: "8000"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SUBGRAPH_URL
+        value: https://api.thegraph.com/subgraphs/name/polymarket/polymarket-v2
+      - key: CORS_ORIGINS
+        value: "*"

@@ -1,24 +1,24 @@
-# 1) Build frontend
-FROM node:18-alpine AS frontend-build
+# — Stage 1: build the React app —
+FROM node:18-alpine AS frontend
 WORKDIR /app/frontend
-COPY frontend/package.json ./
-RUN yarn install
-COPY frontend/public ./public
-COPY frontend/src ./src
+
+COPY frontend/package.json frontend/yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+COPY frontend/ ./
 RUN yarn build
 
-# 2) Install Python deps
-FROM python:3.11-slim AS python-deps
-WORKDIR /app
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# 3) Final image
+# — Stage 2: build the Python app —
 FROM python:3.11-slim
 WORKDIR /app
-COPY --from=python-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY main.py ./
-COPY --from=frontend-build /app/frontend/build ./static
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY main.py .
+
+COPY --from=frontend /app/frontend/build ./static
 
 EXPOSE 8000
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
