@@ -1,35 +1,32 @@
-# Stage 1: Build React frontend
+# ─── Stage 1: Build the React frontend ─────────────────────────────────────────
 FROM node:18-alpine AS frontend-build
 WORKDIR /app/frontend
-COPY frontend/package.json ./
+
+# Copy only the lock‑files first to cache installs
+COPY frontend/package.json frontend/yarn.lock ./
 RUN yarn install --frozen-lockfile
+
+# Copy rest and build
 COPY frontend/public ./public
-COPY frontend/src ./src
+COPY frontend/src    ./src
 RUN yarn build
 
-# Stage 2: Install Python deps
-FROM python:3.11-slim AS python-deps
-WORKDIR /app
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Stage 3: Final image
+# ─── Stage 2: Build the FastAPI backend + bundle frontend ───────────────────────
 FROM python:3.11-slim
 WORKDIR /app
 
-# Copy installed Python packages
-COPY --from=python-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# Copy in dependencies and install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code and the built frontend
-COPY main.py requirements.txt ./
+# Copy in backend code
+COPY main.py .
+
+# Copy built frontend into a static directory
 COPY --from=frontend-build /app/frontend/build ./static
 
-# Expose HTTP port
-EXPOSE 80
+# Expose the port your FastAPI app listens on
+EXPOSE 8000
 
-# Default env vars
-ENV SUBGRAPH_URL=https://api.thegraph.com/subgraphs/name/polymarket/polymarket-v2
-ENV CORS_ORIGINS="*"
-
-# Launch API + static server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+# Start the app
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
