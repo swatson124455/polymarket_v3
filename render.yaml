@@ -4,7 +4,8 @@ services:
     env: docker
     branch: main
     dockerfilePath: Dockerfile
-    port: 80
+    port: 80                     # you already have this
+    healthCheckPath: /health     # ← new
     autoDeploy: true
     envVars:
       - key: JWT_SECRET
