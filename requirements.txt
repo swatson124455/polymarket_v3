@@ -1,8 +1,2 @@
 fastapi
 uvicorn[standard]
-pydantic
-requests
-graphqlclient
-numpy
-pandas
-web3

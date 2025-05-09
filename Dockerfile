@@ -1,21 +1,24 @@
-# Stage 1: build frontend
+# 1) Build frontend
 FROM node:18-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package.json ./
-# If you have a yarn.lock, uncomment next line and include your lock file
-# COPY frontend/yarn.lock ./
 RUN yarn install
 COPY frontend/public ./public
 COPY frontend/src ./src
 RUN yarn build
 
-# Stage 2: python backend
-FROM python:3.11-slim
+# 2) Install Python deps
+FROM python:3.11-slim AS python-deps
 WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+
+# 3) Final image
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=python-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY main.py ./
-# Copy frontend build
 COPY --from=frontend-build /app/frontend/build ./static
-# Run Uvicorn on the port Render provides (default 8000)
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
