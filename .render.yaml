@@ -3,9 +3,9 @@ services:
     name: polymarket-v2
     env: docker
     branch: main
-    dockerfilePath: Dockerfile
-    port: 80                     # you already have this
-    healthCheckPath: /health     # ← new
+    dockerfilePath: Dockerfile   # points to that file you just uploaded
+    port: 80
+    healthCheckPath: /health
     autoDeploy: true
     envVars:
       - key: JWT_SECRET
